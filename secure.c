@@ -401,9 +401,9 @@ sec_out_mcs_data(STREAM s)
 	out_uint16_le(s, 8);
 	out_uint16_le(s, g_width);
 	out_uint16_le(s, g_height);
-	out_uint16_le(s, 0xca01);
-	out_uint16_le(s, 0xaa03);
-	out_uint32_le(s, g_keylayout);
+	out_uint16_le(s, 0xca01); /* colorDepth = RNS_UD_COLOR_8BPP */
+	out_uint16_le(s, 0xaa03); /* SASSequence = RNS_UD_SAS_DEL */
+	out_uint32_le(s, g_keylayout); /* keyboardLayout */
 	out_uint32_le(s, 2600);	/* Client build. We are now 2600 compatible :-) */
 
 	/* Unicode name of client, padded to 32 bytes */
@@ -415,16 +415,16 @@ sec_out_mcs_data(STREAM s)
 	out_uint32_le(s, g_keyboard_type);
 	out_uint32_le(s, g_keyboard_subtype);
 	out_uint32_le(s, g_keyboard_functionkeys);
-	out_uint8s(s, 64);	/* reserved? 4 + 12 doublewords */
-	out_uint16_le(s, 0xca01);	/* colour depth? */
-	out_uint16_le(s, 1);
+	out_uint8s(s, 64);	/* reserved? 4 + 12 doublewords - imeFileName */
+	out_uint16_le(s, 0xca01);	/* colour depth? - postBeta2ColorDepth = RNS_UD_COLOR_8BPP */
+	out_uint16_le(s, 1); /* clientProductId */
 
-	out_uint32(s, 0);
-	out_uint8(s, g_server_depth);
-	out_uint16_le(s, 0x0700);
-	out_uint8(s, 0);
-	out_uint32_le(s, 1);
-	out_uint8s(s, 64);	/* End of client info */
+	out_uint32(s, 0); /* serialNumber */
+	out_uint16_le(s, g_server_depth == 32 ? 24 : g_server_depth); /* highColorDepth (max. 24bpp) */
+	out_uint16_le(s, 0x000F); /* supportedColorDepths = RNS_UD_24BPP_SUPPORT + RNS_UD_16BPP_SUPPORT + RNS_UD_15BPP_SUPPORT + RNS_UD_32BPP_SUPPORT */
+	out_uint16_le(s, 0x0000 | ((g_server_depth == 24 || g_server_depth == 32) ? 0x0002 : 0x0000)); /* earlyCapabilityFlags = RNS_UD_CS_SUPPORT_ERRINFO_PDU + RNS_UD_CS_WANT_32BPP_SESSION */
+	out_uint8s(s, 64);
+	out_uint8s(s, 2); /* padding - End of client info */
 
 	out_uint16_le(s, SEC_TAG_CLI_4);
 	out_uint16_le(s, 12);
