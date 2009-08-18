@@ -54,6 +54,7 @@ extern RD_BOOL g_bitmap_cache;
 extern RD_BOOL g_bitmap_cache_persist_enable;
 extern RD_BOOL g_numlock_sync;
 extern RD_BOOL g_pending_resize;
+extern RD_BOOL g_sendmotion;
 
 uint8 *g_next_packet;
 uint32 g_rdp_shareid;
@@ -1104,7 +1105,12 @@ process_colour_pointer_common(STREAM s, int bpp)
 	y = MAX(y, 0);
 	y = MIN(y, height - 1);
 	cursor = ui_create_cursor(x, y, width, height, mask, data, bpp);
-	ui_set_cursor(cursor);
+
+	/* Don't really set the cursor if sending of motions is suppressed,
+	   just keep the arrow forever. */
+	if (g_sendmotion)
+		ui_set_cursor(cursor);
+
 	cache_put_cursor(cache_idx, cursor);
 }
 
@@ -1132,7 +1138,11 @@ process_cached_pointer_pdu(STREAM s)
 	uint16 cache_idx;
 
 	in_uint16_le(s, cache_idx);
-	ui_set_cursor(cache_get_cursor(cache_idx));
+
+	/* Don't really set the cursor if sending of motions is suppressed,
+	   just keep the arrow forever. */
+	if (g_sendmotion)
+		ui_set_cursor(cache_get_cursor(cache_idx));
 }
 
 /* Process a system pointer PDU */
@@ -1145,7 +1155,8 @@ process_system_pointer_pdu(STREAM s)
 	switch (system_pointer_type)
 	{
 		case RDP_NULL_POINTER:
-			ui_set_null_cursor();
+			if (g_sendmotion)
+				ui_set_null_cursor();
 			break;
 
 		default:

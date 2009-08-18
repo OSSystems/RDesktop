@@ -1981,10 +1981,9 @@ static void
 get_input_mask(long *input_mask)
 {
 	*input_mask = KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask |
-		VisibilityChangeMask | FocusChangeMask | StructureNotifyMask;
+		VisibilityChangeMask | FocusChangeMask | StructureNotifyMask | 
+		PointerMotionMask;
 
-	if (g_sendmotion)
-		*input_mask |= PointerMotionMask;
 	if (g_ownbackstore)
 		*input_mask |= ExposureMask;
 	if (g_fullscreen || g_grab_keyboard)
@@ -2401,6 +2400,12 @@ xwin_process_events(void)
 				break;
 
 			case MotionNotify:
+				if (!g_sendmotion && (xevent.xmotion.state 
+						      & (Button1Mask 
+						         | Button2Mask
+						         | Button3Mask)) == 0)
+					break;
+
 				if (g_moving_wnd)
 				{
 					XMoveWindow(g_display, g_wnd,

@@ -23,6 +23,7 @@
 extern uint8 *g_next_packet;
 
 extern RDPCOMP g_mppc_dict;
+extern RD_BOOL g_sendmotion;
 
 void
 rdp5_process(STREAM s)
@@ -94,7 +95,8 @@ rdp5_process(STREAM s)
 			case 3:	/* update synchronize */
 				break;
 			case 5:	/* null pointer */
-				ui_set_null_cursor();
+				if (g_sendmotion)
+					ui_set_null_cursor();
 				break;
 			case 6:	/* default pointer */
 				break;
