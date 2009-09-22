@@ -959,6 +959,13 @@ serial_get_event(RD_NTHANDLE handle, uint32 * result)
 #ifdef TIOCINQ
 	pser_inf = (SERIAL_DEVICE *) g_rdpdr_device[index].pdevice_data;
 
+	/* When wait_mask is set to zero we ought to cancel it all
+	   For reference: http://msdn.microsoft.com/en-us/library/aa910487.aspx */
+	if (pser_inf->wait_mask == 0) {
+		pser_inf->event_pending = 0;
+		return True;
+	}
+
 	ioctl(handle, TIOCINQ, &bytes);
 
 	if (bytes > 0)
