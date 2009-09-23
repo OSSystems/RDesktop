@@ -115,6 +115,23 @@ if test x"$HAVE_XRANDR" = "x1"; then
     AC_DEFINE(HAVE_XRANDR)
 fi
 
+
+# jared.jennings.ctr@eglin.af.mil 25 Mar 2008
+m4_define([_PKG_CONFIG_IFELSE],
+[if test -n "$PKG_CONFIG"; then
+    PKG_CHECK_EXISTS([$2],
+                     [if AC_RUN_LOG([$PKG_CONFIG --[]$1 "$2"]); then
+                          [$3]
+                      else
+                          [$4]
+                      fi],
+                     [pkg_failed=yes])
+else
+	pkg_failed=untried
+fi[]dnl
+])# _PKG_CONFIG_IFELSE
+
+
 AC_ARG_ENABLE(smartcard, 
              [  --enable-smartcard	  Enables smart-card support.
 	     ],
@@ -153,6 +170,13 @@ AC_ARG_ENABLE(smartcard,
 			[AC_MSG_RESULT(yes) AC_DEFINE(WITH_PCSC120, 1, [old version of PCSC])],
 			[AC_MSG_RESULT(no)]
 		)
+                AC_MSG_CHECKING([for new (>=1.4.100) version of PCSC])
+                _PKG_CONFIG_IFELSE([atleast-version=1.4.100],
+                                   [libpcsclite],
+                                   AC_MSG_RESULT(yes),
+                                   AC_MSG_RESULT(no)
+                                    AC_DEFINE(PCSCLITE_1_4_4_OR_BEFORE, 1,
+                                              [version of PCSC without IDENTITY_SHIFT])) 
              ])
 
 AC_SUBST(SCARDOBJ)

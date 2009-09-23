@@ -30,7 +30,7 @@
  * spreads without limit. The alternative is to patch the heck out of rdesktop,
  * which is already being done anyway.
  *
- * - jared.jennings@eglin.af.mil, 2 Aug 2006
+ * - jared.jennings.ctr@eglin.af.mil, 2 Aug 2006
  */
 
 #ifdef HAVE_STDINT_H

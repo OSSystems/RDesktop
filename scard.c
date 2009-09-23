@@ -244,7 +244,15 @@ scard_enum_devices(uint32 * id, char *optarg)
 #ifndef MAKE_PROTO
 /* ---------------------------------- */
 
-/* These two functions depend heavily on the actual implementation of the smart
+/* Changeset 2635 in the PC/SC Lite Subversion repository
+ * <http://svn.debian.org/wsvn/pcsclite/> amends readerfactory.c to shift the
+ * reader context identity by a constant IDENTITY_SHIFT bits (defined at 16
+ * right now), instead of (sizeof(DWORD)/2)*8 bits as cited below, which varies
+ * with the sizeof(DWORD). The first release with this change in it is 1.4.100;
+ * the lengthy comment below still applies to pcsc-lite 1.4.4 and earlier.
+ * - <jared.jennings.ctr@eglin.af.mil>, 25 March 2008
+ *
+ * These two functions depend heavily on the actual implementation of the smart
  * card handle in PC/SC Lite 1.3.1. Here are the salient bits:
  *
  * From winscard.c:331, in SCardConnect:
@@ -286,22 +294,30 @@ scard_enum_devices(uint32 * id, char *optarg)
  * nothing, which will not break anything.)
  *
  *
- * - jared.jennings@eglin.af.mil, 2 Aug 2006
+ * - jared.jennings.ctr@eglin.af.mil, 2 Aug 2006
  */
 
 
 static MYPCSC_SCARDHANDLE
 scHandleToMyPCSC(SERVER_SCARDHANDLE server)
 {
+#ifdef PCSCLITE_1_4_4_OR_BEFORE
 	return (((MYPCSC_SCARDHANDLE) server >> (sizeof(SERVER_DWORD) * 8 / 2) & 0xffff)
 		<< (sizeof(MYPCSC_DWORD) * 8 / 2)) + (server & 0xffff);
+#else
+	return server;
+#endif
 }
 
 static SERVER_SCARDHANDLE
 scHandleToServer(MYPCSC_SCARDHANDLE mypcsc)
 {
+#ifdef PCSCLITE_1_4_4_OR_BEFORE
 	return ((mypcsc >> (sizeof(MYPCSC_DWORD) * 8 / 2) & 0xffff)
 		<< (sizeof(SERVER_DWORD) * 8 / 2)) + (mypcsc & 0xffff);
+#else
+	return mypcsc;
+#endif
 }
 
 /* ---------------------------------- */
