@@ -422,7 +422,7 @@ sec_out_mcs_data(STREAM s)
 	out_uint32(s, 0); /* serialNumber */
 	out_uint16_le(s, g_server_depth == 32 ? 24 : g_server_depth); /* highColorDepth (max. 24bpp) */
 	out_uint16_le(s, 0x000F); /* supportedColorDepths = RNS_UD_24BPP_SUPPORT + RNS_UD_16BPP_SUPPORT + RNS_UD_15BPP_SUPPORT + RNS_UD_32BPP_SUPPORT */
-	out_uint16_le(s, 0x0000 | ((g_server_depth == 24 || g_server_depth == 32) ? 0x0002 : 0x0000)); /* earlyCapabilityFlags = RNS_UD_CS_SUPPORT_ERRINFO_PDU + RNS_UD_CS_WANT_32BPP_SESSION */
+	out_uint16_le(s, 0x0001 | ((g_server_depth == 24 || g_server_depth == 32) ? 0x0002 : 0x0000)); /* earlyCapabilityFlags = RNS_UD_CS_SUPPORT_ERRINFO_PDU + RNS_UD_CS_WANT_32BPP_SESSION */
 	out_uint8s(s, 64);
 	out_uint8s(s, 2); /* padding - End of client info */
 
