@@ -465,6 +465,7 @@ main(int argc, char *argv[])
 	char *locale = NULL;
 	int username_option = 0;
 	RD_BOOL geometry_option = False;
+	int err;
 #ifdef WITH_RDPSND
 	char *rdpsnd_optarg = NULL;
 #endif
@@ -1012,9 +1013,12 @@ main(int argc, char *argv[])
 				return EX_OSERR;
 
 		g_redirect = False;
-		rdp_main_loop(&deactivated, &ext_disc_reason);
+		err = rdp_main_loop(&deactivated, &ext_disc_reason);
 
 		DEBUG(("Disconnecting...\n"));
+		if (err == ECONNRESET)
+			return EXRD_RESET_BY_PEER;
+
 		rdp_disconnect();
 
 		if (g_redirect)

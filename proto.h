@@ -147,7 +147,7 @@ void process_system_pointer_pdu(STREAM s);
 void process_bitmap_updates(STREAM s);
 void process_palette(STREAM s);
 void process_disconnect_pdu(STREAM s, uint32 * ext_disc_reason);
-void rdp_main_loop(RD_BOOL * deactivated, uint32 * ext_disc_reason);
+int rdp_main_loop(RD_BOOL * deactivated, uint32 * ext_disc_reason);
 RD_BOOL rdp_loop(RD_BOOL * deactivated, uint32 * ext_disc_reason);
 RD_BOOL rdp_connect(char *server, uint32 flags, char *domain, char *password, char *command,
 		    char *directory, RD_BOOL reconnect);

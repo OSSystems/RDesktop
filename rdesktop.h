@@ -116,6 +116,9 @@
 #define EXRD_WINDOW_CLOSED 62
 #define EXRD_UNKNOWN 63
 
+/* errno exit codes */
+#define EXRD_RESET_BY_PEER 100 /* ECONNRESET */
+
 #ifdef WITH_DEBUG
 #define DEBUG(args)	printf args;
 #else

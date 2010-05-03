@@ -1588,16 +1588,17 @@ process_redirect_pdu(STREAM s /*, uint32 * ext_disc_reason */ )
 }
 
 /* Process incoming packets */
-void
+int
 rdp_main_loop(RD_BOOL * deactivated, uint32 * ext_disc_reason)
 {
 	while (rdp_loop(deactivated, ext_disc_reason))
 	{
 		if (g_pending_resize)
 		{
-			return;
+			return errno;
 		}
 	}
+	return errno;
 }
 
 /* used in uiports and rdp_main_loop, processes the rdp packets waiting */
