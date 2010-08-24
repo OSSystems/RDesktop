@@ -1039,21 +1039,21 @@ _rdpdr_check_fds(fd_set * rfds, fd_set * wfds, RD_BOOL timed_out)
 #if WITH_DEBUG_RDP5
 						DEBUG(("RDPDR: %d bytes of data read\n", result));
 #endif
-						/* only delete link if all data has been transfered */
-						/* or if result was 0 and status success - EOF      */
-						if ((iorq->partial_len == iorq->length) ||
-						    (result == 0))
-						{
+					}
+					/* only delete link if all data has been transfered */
+					/* or if result was 0 and status success - EOF      */
+					if ((iorq->partial_len == iorq->length) ||
+					    (result == 0))
+					{
 #if WITH_DEBUG_RDP5
-							DEBUG(("RDPDR: AIO total %u bytes read of %u\n", iorq->partial_len, iorq->length));
+						DEBUG(("RDPDR: AIO total %u bytes read of %u\n", iorq->partial_len, iorq->length));
 #endif
-							rdpdr_send_completion(iorq->device,
-									      iorq->id, status,
-									      iorq->partial_len,
-									      iorq->buffer,
-									      iorq->partial_len);
-							iorq = rdpdr_remove_iorequest(prev, iorq);
-						}
+						rdpdr_send_completion(iorq->device,
+								      iorq->id, status,
+								      iorq->partial_len,
+								      iorq->buffer,
+								      iorq->partial_len);
+						iorq = rdpdr_remove_iorequest(prev, iorq);
 					}
 					break;
 				case IRP_MJ_WRITE:
