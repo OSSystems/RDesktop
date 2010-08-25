@@ -949,6 +949,9 @@ rdpdr_remove_iorequest(struct async_iorequest *prev, struct async_iorequest *ior
 
 /* Check if select() returned with one of the rdpdr file descriptors, and complete io if it did */
 static void
+rdpdr_check_event_notify();
+
+static void
 _rdpdr_check_fds(fd_set * rfds, fd_set * wfds, RD_BOOL timed_out)
 {
 	RD_NTSTATUS status;
@@ -1125,7 +1128,21 @@ _rdpdr_check_fds(fd_set * rfds, fd_set * wfds, RD_BOOL timed_out)
 			iorq = iorq->next;
 	}
 
-	/* Check notify */
+	rdpdr_check_event_notify();
+}
+
+
+static void
+rdpdr_check_event_notify()
+{
+	RD_NTSTATUS status;
+	uint32 result = 0;
+	struct async_iorequest *iorq;
+	struct async_iorequest *prev;
+	uint32 buffer_len;
+	struct stream out;
+	uint8 *buffer = NULL;
+
 	iorq = g_iorequest;
 	prev = NULL;
 	while (iorq != NULL)
@@ -1134,6 +1151,23 @@ _rdpdr_check_fds(fd_set * rfds, fd_set * wfds, RD_BOOL timed_out)
 		{
 			switch (iorq->major)
 			{
+				case IRP_MJ_DEVICE_CONTROL:
+					if (serial_get_event(iorq->fd, &result))
+					{
+						buffer = (uint8 *) xrealloc((void *) buffer, 0x14);
+						out.data = out.p = buffer;
+						out.size = sizeof(buffer);
+						out_uint32_le(&out, result);
+						result = buffer_len = out.p - out.data;
+						status = RD_STATUS_SUCCESS;
+						rdpdr_send_completion(iorq->device, iorq->id,
+								      status, result, buffer,
+								      buffer_len);
+						xfree(buffer);
+						iorq = rdpdr_remove_iorequest(prev, iorq);
+					}
+
+					break;
 
 				case IRP_MJ_DIRECTORY_CONTROL:
 					if (g_rdpdr_device[iorq->device].device_type ==
@@ -1157,8 +1191,6 @@ _rdpdr_check_fds(fd_set * rfds, fd_set * wfds, RD_BOOL timed_out)
 					}
 					break;
 
-
-
 			}
 		}
 
@@ -1172,17 +1204,10 @@ _rdpdr_check_fds(fd_set * rfds, fd_set * wfds, RD_BOOL timed_out)
 void
 rdpdr_check_fds(fd_set * rfds, fd_set * wfds, RD_BOOL timed_out)
 {
-	fd_set dummy;
-
-
-	FD_ZERO(&dummy);
-
-
 	/* fist check event queue only,
 	   any serial wait event must be done before read block will be sent
 	 */
-
-	_rdpdr_check_fds(&dummy, &dummy, False);
+	rdpdr_check_event_notify();
 	_rdpdr_check_fds(rfds, wfds, timed_out);
 }
 
