@@ -133,6 +133,9 @@
 #define SERIAL_CHAR_XON		4
 #define SERIAL_CHAR_XOFF	5
 
+/* http://www.codeproject.com/KB/system/chaiyasit_t.aspx */
+#define SERIAL_TIMEOUT_MAX 4294967295u
+
 #ifndef CRTSCTS
 #define CRTSCTS 0
 #endif
@@ -786,12 +789,32 @@ serial_device_control(RD_NTHANDLE handle, uint32 request, STREAM in, STREAM out)
 				      pser_inf->onlimit));
 			set_termios(pser_inf, handle);
 			break;
+
+
+/* http://www.codeproject.com/KB/system/chaiyasit_t.aspx
+	ReadIntervalTimeout
+
+	Specifies the maximum time, in milliseconds, allowed to elapse between the arrival of two characters on the communications line. During a
+	ReadFile operation, the time period begins when the first character is received. If the interval between the arrival of any two characters
+	exceeds this amount, the ReadFile operation is completed and any buffered data is returned. A value of zero indicates that interval
+	time-outs are not used.
+
+	A value of MAXDWORD, combined with zero values for both the ReadTotalTimeoutConstant and ReadTotalTimeoutMultiplier members, specifies that
+	the read operation is to return immediately with the characters that have already been received, even if no characters have been received.
+*/
 		case SERIAL_SET_TIMEOUTS:
 			in_uint32(in, pser_inf->read_interval_timeout);
 			in_uint32(in, pser_inf->read_total_timeout_multiplier);
 			in_uint32(in, pser_inf->read_total_timeout_constant);
 			in_uint32(in, pser_inf->write_total_timeout_multiplier);
 			in_uint32(in, pser_inf->write_total_timeout_constant);
+
+			if (pser_inf->read_interval_timeout == SERIAL_TIMEOUT_MAX &&
+				pser_inf->read_total_timeout_multiplier == SERIAL_TIMEOUT_MAX)
+			{
+				pser_inf->read_interval_timeout = 0;
+				pser_inf->read_total_timeout_multiplier = 0;
+			}
 			DEBUG_SERIAL(("serial_ioctl -> SERIAL_SET_TIMEOUTS read timeout %d %d %d\n",
 				      pser_inf->read_interval_timeout,
 				      pser_inf->read_total_timeout_multiplier,
