@@ -31,6 +31,7 @@
 #include <errno.h>
 #include <signal.h>
 #include "rdesktop.h"
+#include "xpu.h"
 
 #ifdef HAVE_LOCALE_H
 #include <locale.h>
@@ -173,6 +174,7 @@ usage(char *program)
 	fprintf(stderr, "   -z: enable rdp compression\n");
 	fprintf(stderr, "   -x: RDP5 experience (m[odem 28.8], b[roadband], l[an] or hex nr.)\n");
 	fprintf(stderr, "   -P: use persistent bitmap caching\n");
+	fprintf(stderr, "   -w port: XP Unlimited load balancing protocol\n");
 	fprintf(stderr, "   -r: enable specified device redirection (this flag can be repeated)\n");
 	fprintf(stderr,
 		"         '-r comport:COM1=/dev/ttyS0': enable serial redirection of /dev/ttyS0 to COM1\n");
@@ -464,6 +466,7 @@ main(int argc, char *argv[])
 	int c;
 	char *locale = NULL;
 	int username_option = 0;
+	int xpu_port = 0;
 	RD_BOOL geometry_option = False;
 	int err;
 #ifdef WITH_RDPSND
@@ -502,7 +505,7 @@ main(int argc, char *argv[])
 #endif
 
 	while ((c = getopt(argc, argv,
-			   VNCOPT "Au:L:d:s:c:p:n:k:g:fbBeEmzCDKS:T:NX:a:x:Pr:045h?")) != -1)
+			   VNCOPT "Au:L:d:s:c:p:n:k:g:fbBeEmzCDKS:T:NX:a:x:Pw:r:045h?")) != -1)
 	{
 		switch (c)
 		{
@@ -723,6 +726,10 @@ main(int argc, char *argv[])
 
 			case 'P':
 				g_bitmap_cache_persist_enable = True;
+				break;
+
+			case 'w':
+				xpu_port = atoi(optarg);
 				break;
 
 			case 'r':
@@ -953,12 +960,6 @@ main(int argc, char *argv[])
 	if (prompt_password && read_password(password, sizeof(password)))
 		flags |= RDP_LOGON_AUTO;
 
-	if (g_title[0] == 0)
-	{
-		strcpy(g_title, "rdesktop - ");
-		strncat(g_title, server, sizeof(g_title) - sizeof("rdesktop - "));
-	}
-
 #ifdef RDP2VNC
 	rdp2vnc_connect(server, flags, domain, password, shell, directory);
 	return EX_OK;
@@ -993,6 +994,36 @@ main(int argc, char *argv[])
 			STRNCPY(password, g_redirect_password, sizeof(password));
 			STRNCPY(server, g_redirect_server, sizeof(server));
 			flags |= RDP_LOGON_AUTO;
+		}
+
+		if (xpu_port > 0)
+		{
+			char *homedir;
+			char path[PATH_MAX];
+
+			homedir = getenv("HOME");
+			if (!homedir)
+			{
+				error("getenv failed to retrieve home path\n");
+				return 10;
+			}
+
+			sprintf(path, "%s/.rdesktop/", homedir);
+			if ((mkdir(path, 0700) == -1) && errno != EEXIST)
+			{
+				perror(path);
+				return 10;
+			}
+
+			xpu_prefered_server(server, &g_tcp_port_rdp, g_username, xpu_port);
+			DEBUG(("XPU settings %s:%d\n", server, g_tcp_port_rdp));
+		}
+
+		/* Window title must be set after XPU check */
+		if (g_title[0] == 0)
+		{
+			strcpy(g_title, "rdesktop - ");
+			strncat(g_title, server, sizeof(g_title) - sizeof("rdesktop - "));
 		}
 
 		ui_init_connection();
