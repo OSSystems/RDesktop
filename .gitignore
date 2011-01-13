@@ -1,0 +1,57 @@
+# Normal rules
+.*
+*.o
+*.o.*
+*.a
+*.s
+*.ko
+*.so
+*.so.dbg
+*.mod.c
+*.i
+*.lst
+*.symtypes
+*.order
+*.elf
+*.bin
+*.gz
+
+# Top-level generic files
+tags
+TAGS
+vmlinux
+System.map
+Module.markers
+Module.symvers
+!.gitignore
+!.mailmap
+
+# files generated automaticly
+Makefile
+moc_*.cpp
+qrc_*.cpp
+lib
+bin
+*.pro.user
+
+# stgit generated dirs
+patches-*
+
+# quilt's files
+patches
+series
+
+# cscope files
+cscope.*
+ncscope.*
+
+*.orig
+*~
+
+aclocal.m4
+autom4te.cache/
+config.log
+config.status
+configure
+rdesktop
+
