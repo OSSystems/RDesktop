@@ -319,17 +319,23 @@ rdpdr_send_completion(uint32 device, uint32 id, uint32 status, uint32 result, ui
 {
 	uint8 magic[4] = "rDCI";
 	STREAM s;
+	unsigned char *b;
 
 #ifdef WITH_SCARD
 	scard_lock(SCARD_LOCK_RDPDR);
 #endif
 	s = channel_init(rdpdr_channel, 20 + length);
+	b = s->p;
 	out_uint8a(s, magic, 4);
 	out_uint32_le(s, device);
 	out_uint32_le(s, id);
 	out_uint32_le(s, status);
-	out_uint32_le(s, result);
+	out_uint32_le(s, result); printf("result %d\n", result);
 	out_uint8p(s, buffer, length);
+printf("###########################################\n");
+hexdump(b, s->p - b);
+/*hexdump(buffer, length);*/
+printf("###########################################\n");
 	s_mark_end(s);
 	/* JIF */
 #ifdef WITH_DEBUG_RDP5
@@ -416,6 +422,7 @@ rdpdr_process_irp(STREAM s)
 			return;
 	}
 
+	printf("IRP_MJ________________________________%d\n", major);
 	switch (major)
 	{
 		case IRP_MJ_CREATE:
@@ -664,7 +671,7 @@ rdpdr_process_irp(STREAM s)
 			break;
 
 		case IRP_MJ_DEVICE_CONTROL:
-
+			printf("MJ_DEVICE_CONTROL______________________________________________________________________________________\n");
 			if (!fns->device_control)
 			{
 				status = RD_STATUS_NOT_SUPPORTED;
@@ -675,6 +682,8 @@ rdpdr_process_irp(STREAM s)
 			in_uint32_le(s, bytes_in);
 			in_uint32_le(s, request);
 			in_uint8s(s, 0x14);
+
+			hexdump(s->p, bytes_in);
 
 			buffer = (uint8 *) xrealloc((void *) buffer, bytes_out + 0x14);
 			if (!buffer)
