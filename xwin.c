@@ -49,9 +49,12 @@ extern char g_title[];
    As of RDP 5.1, it may be 8, 15, 16 or 24. */
 extern int g_server_depth;
 extern int g_win_button_size;
+extern int g_autorepeat_delay;
 
 Display *g_display;
 Time g_last_gesturetime;
+Time g_last_key_pressed_time = 0;
+RD_BOOL g_performance_keys[300];
 static int g_x_socket;
 static Screen *g_screen;
 Window g_wnd;
@@ -2340,7 +2343,22 @@ xwin_process_events(void)
 				break;
 
 			case KeyPress:
+				if ((xevent.xkey.time -  g_last_key_pressed_time) < g_autorepeat_delay &&
+					g_performance_keys[xevent.xkey.keycode])
+				{
+					/* Can't break if it is a num pad key and Num Lock on */
+					if (!((xevent.xkey.keycode == 80 ||
+						xevent.xkey.keycode == 81 ||
+						xevent.xkey.keycode == 83 ||
+						xevent.xkey.keycode == 85 ||
+						xevent.xkey.keycode == 88 ||
+						xevent.xkey.keycode == 89) &&
+						(xevent.xkey.state == 16)))
+						break;
+				}
 				g_last_gesturetime = xevent.xkey.time;
+				g_last_key_pressed_time = xevent.xkey.time;
+
 				if (g_IC != NULL)
 					/* Multi_key compatible version */
 				{

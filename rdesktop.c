@@ -28,6 +28,7 @@
 #include <sys/time.h>		/* gettimeofday */
 #include <sys/times.h>		/* times */
 #include <ctype.h>		/* toupper */
+#include <stdio.h>
 #include <errno.h>
 #include <signal.h>
 #include "rdesktop.h"
@@ -123,6 +124,8 @@ char g_codepage[16] = "";
 extern RDPDR_DEVICE g_rdpdr_device[];
 extern uint32 g_num_devices;
 extern char *g_rdpdr_clientname;
+int g_autorepeat_delay = 33;
+extern RD_BOOL g_performance_keys[300];
 
 #ifdef RDP2VNC
 extern int rfb_port;
@@ -365,6 +368,30 @@ rdesktop_reset_state(void)
 #endif
 }
 
+static int
+calc_autorepeat_delay_from(const char *filename)
+{
+	FILE *fin = fopen(filename, "r");
+	char buff[100];
+	int delay = 33; /* default value */
+
+	if (!fin)
+		return delay;
+
+	while(fscanf(fin, "%s", buff) != EOF)
+		if (strcmp(buff, "bogomips") == 0)
+			fscanf(fin, "%s %d", buff, &delay);
+
+	delay = 100000 / delay;
+	if (delay < 33)
+		delay = 33;
+
+	if (delay > 200)
+		delay = 200;
+
+	return delay;
+}
+
 static RD_BOOL
 read_password(char *password, int size)
 {
@@ -449,6 +476,32 @@ parse_server_and_port(char *server)
 
 }
 
+void init_performance_keys()
+{
+	memset(g_performance_keys, 0, 300);
+
+	/* arrow keys */
+	g_performance_keys[111] = True;
+	g_performance_keys[114] = True;
+	g_performance_keys[113] = True;
+	g_performance_keys[116] = True;
+
+	/* PG UP/DOWN*/
+	g_performance_keys[112] = True;
+	g_performance_keys[117] = True;
+
+	/* numeric arrow keys */
+	g_performance_keys[80] = True;
+	g_performance_keys[83] = True;
+	g_performance_keys[85] = True;
+	g_performance_keys[88] = True;
+
+	/* numeric PG UP/DOWN */
+	g_performance_keys[81] = True;
+	g_performance_keys[89] = True;
+}
+
+
 /* Client program */
 int
 main(int argc, char *argv[])
@@ -497,12 +550,16 @@ main(int argc, char *argv[])
 	g_embed_wnd = 0;
 
 	g_num_devices = 0;
+	init_performance_keys();
 
 #ifdef RDP2VNC
 #define VNCOPT "V:Q:"
 #else
 #define VNCOPT
 #endif
+
+	g_autorepeat_delay = calc_autorepeat_delay_from("/proc/cpuinfo");
+	DEBUG(("Autorepeat delay calculated: %d\n", g_autorepeat_delay));
 
 	while ((c = getopt(argc, argv,
 			   VNCOPT "Au:L:d:s:c:p:n:k:g:fbBeEmzCDKS:T:NX:a:x:Pw:r:045h?")) != -1)
