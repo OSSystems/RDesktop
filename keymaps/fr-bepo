@@ -68,8 +68,8 @@ OE 0x13 shift altgr
 egrave 0x14
 Egrave 0x14 shift
 
-exclam 0x15
-dead_circumflex 0x15 shift
+dead_circumflex 0x15
+exclam 0x15 shift
 
 v 0x16 addupper
 
@@ -154,3 +154,9 @@ g 0x33 addupper
 h 0x34 addupper
 
 f 0x35 addupper
+
+#
+# BÉPO space
+#
+
+underscore 0x39 altgr
